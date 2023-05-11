@@ -1,8 +1,9 @@
 const express = require('express');
+
 const cors = require('cors');
 const app = express();
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 //middleware here
@@ -27,13 +28,36 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const serviceCollection = client.db('carDoctor').collection('services')
+    const BookingCollection = client.db('carDoctor').collection('bookings')
+
+//get All services data from db
 
 app.get('/services',async(req,res)=>{
     const cursor = serviceCollection.find();
     const result = await cursor.toArray();
     res.send(result)
 })
+// get spcific service from db
+app.get('/services/:id',async(req,res)=>{
+    const id = req.params.id;
+    const quiry = {_id: new ObjectId(id)};
+    const options = {
+     
+      // Include only the `title` and `imdb` fields in the returned document
+      projection: {  title: 1, price: 1,service_id:1,img:1 },
+    };
+    const result = await serviceCollection.findOne(quiry,options);
+    res.send(result)
+})
 
+
+// insert data to db
+app.post('/booking',async(req,res)=>{
+  const booking = req.body;
+  console.log(booking);
+  const result = await BookingCollection.insertOne(booking)
+  res.send(result);
+})
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
